@@ -11,6 +11,7 @@ int lastHumidity = -1;
 void setup() {
     Serial.begin(115200);
     ClimateSensor::init();
+    WiFi.setHostname("SmartFan-X97");
     homeSpan.begin(Category::Fans, "Smart Fan", "SmartFan", "X97");
     new SpanAccessory();
     new Service::AccessoryInformation();
@@ -27,7 +28,7 @@ void setup() {
     temperature = new Characteristic::CurrentTemperature(10);
     new Characteristic::StatusActive(1);
 
-    fan = new SmartFan(23);
+    fan = new SmartFan(23, 50, 64);
     homeSpan.autoPoll();
 }
 
@@ -73,7 +74,7 @@ void loop() {
         }
 
         fan->requestSpeedUpdate(autoFanSpeed);
-        
+
     } else {
         if (temperature->getVal()) {
             temperature->setVal(0);
