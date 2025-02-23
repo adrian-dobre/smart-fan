@@ -40,12 +40,13 @@ void loop() {
         if (humidity->getVal() != ClimateSensor::data.humidity) {
             humidity->setVal(ClimateSensor::data.humidity);
         }
+        
         bool humidityIncreasing = false;
         if (ClimateSensor::data.humidity > lastHumidity) {
             humidityIncreasing = true;
-            lastHumidity = ClimateSensor::data.humidity;
         }
-
+        lastHumidity = ClimateSensor::data.humidity;
+        
         int autoFanSpeed = 50;
         if (humidityIncreasing) {
             if (ClimateSensor::data.humidity > 92) {
