@@ -15,7 +15,12 @@ void SmartFan::requestSpeedUpdate(int speed) {
     unsigned int sessionTimeLeft = 0;
     if (manualAdjustment) {
         unsigned int timeInManualMode = millis() - lastManualAdjustment;
-        if (timeInManualMode > sessionLength) {
+        bool safetyOverride = speed > 80 && this->speed->getVal() < 80;
+        if (timeInManualMode > sessionLength || safetyOverride) {
+            if (safetyOverride) {
+                Serial.println(
+                    "Overriding manual adjustment for safety reasons");
+            }
             manualAdjustment = false;
         } else {
             sessionTimeLeft = sessionLength - timeInManualMode;
