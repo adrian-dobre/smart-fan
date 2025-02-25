@@ -3,7 +3,7 @@ void notifyAutoAdjustment(void *);
 
 SmartFan::SmartFan(int pin, int startSpeed, int frequency) : Service::Fan() {
     pinMode(pin, OUTPUT);
-    fan = new LedPin(pin, startSpeed, frequency);
+    fan = new LedPin(pin, startSpeed, frequency, true);
     active = new Characteristic::Active(1);
     speed = new Characteristic::RotationSpeed(50);
     state = new Characteristic::CurrentFanState(2);
@@ -58,10 +58,10 @@ boolean SmartFan::update() {
 void SmartFan::_handleSpeedUpdates(int newSpeed, bool autoAjusted) {
     int currentSpeed = speed->getVal();
     bool adjusted = false;
-    if (newSpeed < 30 && newSpeed > 10) {
-        newSpeed = 30;
+    if (newSpeed < 15 && newSpeed > 5) {
+        newSpeed = 15;
         adjusted = true;
-    } else if (newSpeed <= 10) {
+    } else if (newSpeed <= 5) {
         newSpeed = 0;
         adjusted = true;
     }
