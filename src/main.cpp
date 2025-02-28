@@ -7,12 +7,14 @@ SpanCharacteristic *temperature;
 SpanCharacteristic *humidity;
 SmartFan *fan;
 int lastHumidity = -1;
+int hysteresis = 2;
 
 void setup() {
-    Serial.begin(115200);
+    // Serial.begin(115200);
     ClimateSensor::init();
     WiFi.setHostname("SmartFan-X97");
     homeSpan.begin(Category::Fans, "Smart Fan", "SmartFan", "X97");
+    homeSpan.enableWebLog();
     new SpanAccessory();
     new Service::AccessoryInformation();
     new Characteristic::Identify();
@@ -28,7 +30,7 @@ void setup() {
     temperature = new Characteristic::CurrentTemperature(10);
     new Characteristic::StatusActive(1);
 
-    fan = new SmartFan(23, 50);
+    fan = new SmartFan(13, 50);
     homeSpan.autoPoll();
 }
 
@@ -49,28 +51,30 @@ void loop() {
 
         int autoFanSpeed = 50;
         if (humidityIncreasing) {
-            if (ClimateSensor::data.humidity > 92) {
+            if (ClimateSensor::data.humidity >= (90 + hysteresis)) {
                 autoFanSpeed = 100;
-            } else if (ClimateSensor::data.humidity > 82) {
+            } else if (ClimateSensor::data.humidity >= (80 + hysteresis)) {
                 autoFanSpeed = 90;
-            } else if (ClimateSensor::data.humidity > 72) {
+            } else if (ClimateSensor::data.humidity >= (70 + hysteresis)) {
                 autoFanSpeed = 80;
-            } else if (ClimateSensor::data.humidity > 62) {
+            } else if (ClimateSensor::data.humidity >= (60 + hysteresis)) {
                 autoFanSpeed = 70;
-            } else if (ClimateSensor::data.humidity > 52) {
+            } else if (ClimateSensor::data.humidity >= (50 + hysteresis)) {
                 autoFanSpeed = 60;
             }
         } else {
-            if (ClimateSensor::data.humidity < 48) {
+            if (ClimateSensor::data.humidity <= (50 - hysteresis)) {
                 autoFanSpeed = 50;
-            } else if (ClimateSensor::data.humidity < 58) {
+            } else if (ClimateSensor::data.humidity <= (60 - hysteresis)) {
                 autoFanSpeed = 60;
-            } else if (ClimateSensor::data.humidity < 68) {
+            } else if (ClimateSensor::data.humidity <= (70 - hysteresis)) {
                 autoFanSpeed = 70;
-            } else if (ClimateSensor::data.humidity < 78) {
+            } else if (ClimateSensor::data.humidity <= (80 - hysteresis)) {
                 autoFanSpeed = 80;
-            } else if (ClimateSensor::data.humidity < 88) {
+            } else if (ClimateSensor::data.humidity <= (90 - hysteresis)) {
                 autoFanSpeed = 90;
+            } else if (ClimateSensor::data.humidity <= (100 - hysteresis)) {
+                autoFanSpeed = 100;
             }
         }
 
