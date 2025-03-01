@@ -1,7 +1,6 @@
 #include <Arduino.h>
 
 #include "ClimateSensor.h"
-#include "Config.h"
 #include "SmartFan.h"
 
 SpanCharacteristic *temperature;
