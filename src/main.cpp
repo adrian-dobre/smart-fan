@@ -1,13 +1,14 @@
 #include <Arduino.h>
 
 #include "ClimateSensor.h"
+#include "Config.h"
 #include "SmartFan.h"
 
 SpanCharacteristic *temperature;
 SpanCharacteristic *humidity;
 SmartFan *fan;
 int lastHumidity = -1;
-int hysteresis = 2;
+int hysteresis = 1;
 
 void setup() {
     // Serial.begin(115200);
@@ -30,7 +31,7 @@ void setup() {
     temperature = new Characteristic::CurrentTemperature(10);
     new Characteristic::StatusActive(1);
 
-    fan = new SmartFan(13, 50);
+    fan = new SmartFan(FAN_PIN, 50);
     homeSpan.autoPoll();
 }
 
