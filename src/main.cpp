@@ -12,7 +12,7 @@ string modelPrefix = "X97_";
 string hostNamePrefix = "SmartFan-";
 
 void setup() {
-    Serial.begin(115200);
+    // Serial.begin(115200);
     ClimateSensor::init();
     string model = modelPrefix + DEVICE_NAME;
     string hostName = hostNamePrefix + model;
