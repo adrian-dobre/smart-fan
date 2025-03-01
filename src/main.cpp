@@ -8,19 +8,23 @@ SpanCharacteristic *humidity;
 SmartFan *fan;
 int lastHumidity = -1;
 int hysteresis = 1;
+string modelPrefix = "X97_";
+string hostNamePrefix = "SmartFan-";
 
 void setup() {
-    // Serial.begin(115200);
+    Serial.begin(115200);
     ClimateSensor::init();
-    WiFi.setHostname("SmartFan-X97");
-    homeSpan.begin(Category::Fans, "Smart Fan", "SmartFan", "X97");
+    string model = modelPrefix + DEVICE_NAME;
+    string hostName = hostNamePrefix + model;
+    WiFi.setHostname(hostName.c_str());
+    homeSpan.begin(Category::Fans, "Smart Fan", "SmartFan", model.c_str());
     homeSpan.enableWebLog();
     new SpanAccessory();
     new Service::AccessoryInformation();
     new Characteristic::Identify();
     new Characteristic::Name("Smart Fan");
     new Characteristic::Manufacturer("Madtek");
-    new Characteristic::Model("X97");
+    new Characteristic::Model(model.c_str());
 
     new Service::HumiditySensor();
     humidity = new Characteristic::CurrentRelativeHumidity(10);
