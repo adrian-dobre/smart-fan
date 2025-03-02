@@ -18,8 +18,7 @@ void SmartFan::requestSpeedUpdate(int speed) {
         bool safetyOverride = speed > 80 && this->speed->getVal() < 80;
         if (timeInManualMode > sessionLength || safetyOverride) {
             if (safetyOverride) {
-                Serial.println(
-                    "Overriding manual adjustment for safety reasons");
+                WEBLOG("Overriding manual adjustment for safety reasons");
             }
             manualAdjustment = false;
         } else {
@@ -29,10 +28,10 @@ void SmartFan::requestSpeedUpdate(int speed) {
     if (!manualAdjustment) {
         this->_handleSpeedUpdates(speed, true);
     } else {
-        Serial.print(
+        WEBLOG(
             "Manual adjustment detected. Skipping auto speed for this "
-            "session. Session time left: ");
-        Serial.println(sessionTimeLeft);
+            "session. Session time left: %d",
+            sessionTimeLeft);
     }
 }
 

@@ -6,10 +6,10 @@
 SpanCharacteristic *temperature;
 SpanCharacteristic *humidity;
 SmartFan *fan;
-int lastHumidity = -1;
-int hysteresis = 1;
+int hysteresis = 3;
 string modelPrefix = "X97_";
 string hostNamePrefix = "SmartFan-";
+int defaultFanSpeed = 50;
 
 void setup() {
     // Serial.begin(115200);
@@ -18,7 +18,7 @@ void setup() {
     string hostName = hostNamePrefix + model;
     WiFi.setHostname(hostName.c_str());
     homeSpan.begin(Category::Fans, "Smart Fan", "SmartFan", model.c_str());
-    homeSpan.enableWebLog();
+    homeSpan.enableWebLog(30);
     new SpanAccessory();
     new Service::AccessoryInformation();
     new Characteristic::Identify();
@@ -34,8 +34,36 @@ void setup() {
     temperature = new Characteristic::CurrentTemperature(10);
     new Characteristic::StatusActive(1);
 
-    fan = new SmartFan(FAN_PIN, 50);
+    fan = new SmartFan(FAN_PIN, defaultFanSpeed);
     homeSpan.autoPoll();
+}
+
+int getFanSpeedForHumidityLevel(int humidity) {
+    int currentFanSpeed = fan->speed->getVal();
+    if (!fan->active->getVal()) {
+        currentFanSpeed = 0;
+    }
+    if (humidity == 0) {
+        if (currentFanSpeed == 0) {
+            WEBLOG("Fan OFF, returning default speed");
+            return defaultFanSpeed;
+        }
+        return currentFanSpeed;
+    }
+    int speedForHumidity = (humidity / 10 + 1) * 10;
+    if (speedForHumidity > currentFanSpeed) {
+        WEBLOG("Humidity %d, current fan speed %d, target speed %d \n",
+               humidity, currentFanSpeed, speedForHumidity);
+        return speedForHumidity;
+    }
+    if (speedForHumidity < currentFanSpeed) {
+        if (currentFanSpeed - 10 - humidity > hysteresis) {
+            WEBLOG("Humidity %d, current fan speed %d, target speed %d \n",
+                   humidity, currentFanSpeed, speedForHumidity);
+            return speedForHumidity;
+        }
+    }
+    return currentFanSpeed;
 }
 
 void loop() {
@@ -47,42 +75,8 @@ void loop() {
             humidity->setVal(ClimateSensor::data.humidity);
         }
 
-        bool humidityIncreasing = false;
-        if (ClimateSensor::data.humidity > lastHumidity) {
-            humidityIncreasing = true;
-        }
-        lastHumidity = ClimateSensor::data.humidity;
-
-        int autoFanSpeed = 50;
-        if (humidityIncreasing) {
-            if (ClimateSensor::data.humidity >= (90 + hysteresis)) {
-                autoFanSpeed = 100;
-            } else if (ClimateSensor::data.humidity >= (80 + hysteresis)) {
-                autoFanSpeed = 90;
-            } else if (ClimateSensor::data.humidity >= (70 + hysteresis)) {
-                autoFanSpeed = 80;
-            } else if (ClimateSensor::data.humidity >= (60 + hysteresis)) {
-                autoFanSpeed = 70;
-            } else if (ClimateSensor::data.humidity >= (50 + hysteresis)) {
-                autoFanSpeed = 60;
-            }
-        } else {
-            if (ClimateSensor::data.humidity <= (50 - hysteresis)) {
-                autoFanSpeed = 50;
-            } else if (ClimateSensor::data.humidity <= (60 - hysteresis)) {
-                autoFanSpeed = 60;
-            } else if (ClimateSensor::data.humidity <= (70 - hysteresis)) {
-                autoFanSpeed = 70;
-            } else if (ClimateSensor::data.humidity <= (80 - hysteresis)) {
-                autoFanSpeed = 80;
-            } else if (ClimateSensor::data.humidity <= (90 - hysteresis)) {
-                autoFanSpeed = 90;
-            } else if (ClimateSensor::data.humidity <= (100 - hysteresis)) {
-                autoFanSpeed = 100;
-            }
-        }
-
-        fan->requestSpeedUpdate(autoFanSpeed);
+        fan->requestSpeedUpdate(
+            getFanSpeedForHumidityLevel(ClimateSensor::data.humidity));
 
     } else {
         if (temperature->getVal()) {
